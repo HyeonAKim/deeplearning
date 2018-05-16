@@ -34,6 +34,7 @@ def tanh(x, derivative=False):
         return 1 - x ** 2
     return np.tanh(x)
 
+
 # 가중치 배열 만드는 함수
 def makeMatrix(i, j, fill=0.0):
     mat = []
@@ -86,7 +87,7 @@ class NeuralNetwork:
             for i in range(self.num_x):
                 sum = sum + self.activation_input[i] * self.weight_in[i][j]
             # 시그모이드와 tanh 중에서 활성화 함수 선택
-            self.activation_hidden[j] = tanh(sum, False)
+            self.activation_hidden[j] = sigmoid(sum, False)
 
         # 출력층의 활성화 함수
         for k in range(self.num_yo):
@@ -94,10 +95,9 @@ class NeuralNetwork:
             for j in range(self.num_yh):
                 sum = sum + self.activation_hidden[j] * self.weight_out[j][k]
             # 시그모이드와 tanh 중에서 활성화 함수 선택
-            self.activation_out[k] = tanh(sum, False)
-
+            self.activation_out[k] = sigmoid(sum, False)
         return self.activation_out[:]
-    
+
     # 역전파의 실행
     def backPropagate(self, targets):
 
@@ -106,7 +106,7 @@ class NeuralNetwork:
         for k in range(self.num_yo):
             error = targets[k] - self.activation_out[k]
             # 시그모이드와 tanh 중에서 활성화 함수 선택, 미분 적용
-            output_deltas[k] = tanh(self.activation_out[k], True) * error
+            output_deltas[k] = sigmoid(self.activation_out[k], True) * error
 
         # 은닉 노드의 오차 함수
         hidden_deltas = [0.0] * self.num_yh
@@ -115,14 +115,14 @@ class NeuralNetwork:
             for k in range(self.num_yo):
                 error = error + output_deltas[k] * self.weight_out[j][k]
                 # 시그모이드와 tanh 중에서 활성화 함수 선택, 미분 적용
-            hidden_deltas[j] = tanh(self.activation_hidden[j], True) * error
+            hidden_deltas[j] = sigmoid(self.activation_hidden[j], True) * error
 
         # 출력 가중치 업데이트
         for j in range(self.num_yh):
             for k in range(self.num_yo):
                 gradient = output_deltas[k] * self.activation_hidden[j]
-                v = mo * self.gradient_in[j][k] - lr * gradient
-                self.weight_in[j][k] += v
+                v = mo * self.gradient_out[j][k] - lr * gradient
+                self.weight_out[j][k] += v
                 self.gradient_out[j][k] = gradient
 
         # 입력 가중치 업데이트
