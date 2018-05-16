@@ -15,6 +15,7 @@ for name in Names:
     data_label = array('B')
 
     FileList =[]
+
     #폴더에 있는 파일명 읽어오기
     for dirname in os.listdir(name[0])[0:]:
         path = os.path.join(name[0],dirname)
