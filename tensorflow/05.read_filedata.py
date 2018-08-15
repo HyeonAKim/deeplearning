@@ -75,6 +75,11 @@ xy = tf.decode_csv(value, record_defaults=record_defaults)
 # 배치를 이용해서 읽어오기
 train_x_batch, train_y_batch = tf.train.batch([xy[0:-1], xy[-1:]], batch_size=10)
 
+# suffle batch 
+min_afer_dequeue = 10000
+capacity = min_afer_dequeue + 3 * batch_size
+train_x_batch, train_y_batch  = tf.train.shuffle_batch([xy[0:-1], xy[-1:]], batch_size=10,
+                                capacity=capacity, min_afer_dequeue=min_afer_dequeue)
 # 5
 # placeholder for a tensor that will be always fed.
 X = tf.placeholder(tf.float32, shape=[None, 3])
