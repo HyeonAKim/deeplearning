@@ -93,7 +93,7 @@ with tf.Session() as sess:
         for start, end in train_batch:
             sess.run(train_op, feed_dict={X: trX[start:end], Y: trY[start:end],
                                           p_keep_conv: 0.8, p_keep_hidden: 0.5})
-        test_indices = np.arrange(len(teX))
+        test_indices = np.arange(len(teX))
         np.random.shuffle(test_indices)
         test_indices = test_indices[0:test_size]
 
