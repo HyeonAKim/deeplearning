@@ -22,7 +22,7 @@ writer.add_summary(s, global_step = global_step)
 5. Lauch Tensorboard
 커맨드창에서 텐서보드 실행
 tensorboard --logdir=./logs
-tensorboard --host=127.0.0.1 --logdir=C:/Users/HyunA/PycharmProjects/deeplearning/tensorflow/logs
+tensorboard --host=127.0.0.1 --logdir=C:/Users/HyunA/PycharmProjects/deeplearning/tensorflow_tutorial/logs
 """
 import numpy as np
 import tensorflow as tf

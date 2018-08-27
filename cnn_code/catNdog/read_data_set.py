@@ -90,12 +90,12 @@ class DataSet(object):
   """Container class for a dataset (deprecated).
 
   THIS CLASS IS DEPRECATED. See
-  [contrib/learn/README.md](https://www.tensorflow.org/code/tensorflow/contrib/learn/README.md)
+  [contrib/learn/README.md](https://www.tensorflow_tutorial.org/code/tensorflow_tutorial/contrib/learn/README.md)
   for general migration instructions.
   """
 
   @deprecated(None, 'Please use alternatives such as official/mnist/dataset.py'
-              ' from tensorflow/models.')
+              ' from tensorflow_tutorial/models.')
   def __init__(self,
                images,
                labels,

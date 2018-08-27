@@ -113,7 +113,7 @@ cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=hypothesis,
 optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
 # 4
-# Initialize : xavier initalization tensorflow
+# Initialize : xavier initalization tensorflow_tutorial
 sess = tf.Session()
 sess.run(tf.global_variables_initializer())
 

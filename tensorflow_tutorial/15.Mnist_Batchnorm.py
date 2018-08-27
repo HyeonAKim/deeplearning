@@ -24,11 +24,11 @@ class Model:
     Attributes
     ----------
     X : tf.float32
-        This is a tensorflow placholder for MNIST images
+        This is a tensorflow_tutorial placholder for MNIST images
         Expected shape is (None, 784)
 
     y : tf.float32
-        This is a tensorflow placeholder for MNIST labels
+        This is a tensorflow_tutorial placeholder for MNIST labels
         Expected shape is (None, 10)
 
     mode : tf.bool

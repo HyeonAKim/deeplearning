@@ -7,13 +7,13 @@ This is equivalent to tf.nn.sigmoid_softmax_with_logits(logits, labels)
 [References]
 
 1) Tensorflow Document (tf.nn.sigmoid_softmax_with_logits)
-    https://www.tensorflow.org/api_docs/python/tf/nn/sigmoid_cross_entropy_with_logits
+    https://www.tensorflow_tutorial.org/api_docs/python/tf/nn/sigmoid_cross_entropy_with_logits
 
 2) Neural Net Backprop in one slide! by Sung Kim
     https://docs.google.com/presentation/d/1_ZmtfEjLmhbuM_PqbDYMXXLAqeWN0HwuhcSKnUQZ6MM/edit#slide=id.g1ec1d04b5a_1_83
 
 3) Back Propagation with Tensorflow by Dan Aloni
-    http://blog.aloni.org/posts/backprop-with-tensorflow/
+    http://blog.aloni.org/posts/backprop-with-tensorflow_tutorial/
 
 4) Yes you should understand backprop by Andrej Karpathy
     https://medium.com/@karpathy/yes-you-should-understand-backprop-e2f06eab496b#.cockptkn7
