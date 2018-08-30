@@ -31,17 +31,82 @@ import matplotlib.pyplot as plt
 
 plt.rcParams['axes.labelsize'] = 14
 plt.rcParams['xtick.labelsize'] = 12
-plt.rcParams
+plt.rcParams['ytick.labelsize'] = 12
+
+plt.rcParams['font.family'] = 'NanumBarunGothic'
+plt.rcParams['axes.unicode_minus'] = False
+
 # Create save fig function : save_fig()
+PROJECT_ROOT_DIR = "/home/wisemold/Python/old/test_hyeona"
+CHAPTER_ID = "autoencoder"
+
+
+def save_fig(fig_id, tight_layout=True):
+    dir_path = os.path.join(PROJECT_ROOT_DIR, "images", CHAPTER_ID)
+    pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
+    path = os.path.join(dir_path, fig_id+'.png')
+    if tight_layout:
+        plt.tight_layout()
+    plt.savefig(path, format='png', dpi=300)
+
+
 # Create plot image function : plot_image(), plot_multiple_imges()
+def plot_image(image, shape=[28, 28]):
+    plt.imshow(image.reshape(shape), cmap="Greys", interpolation='nearest')
+    plt.axis("off")
+
+
+def plot_multiple_images(images, n_rows, n_cols, pad=2):
+    images = images - min(images)
+    w, h = images[1:]
+    image = np.zeros((w + pad) * n_rows + pad, (h + pad) * n_cols + pad)
+    for y in range(n_rows):
+        for x in range(n_cols):
+            image[(y*(h+pad)+pad):(y*(h+pad)+pad+h), (x*(w+pad)+pad):(x*(w+pad)+pad+w)] = images[y * n_cols + x]
+    plt.imshow(image, cmap="Greys", interpolation='nearest')
+    plt.axis("off")
+
+
+# reconstructed_digits
+def show_reconstructed_digits(X, outputs, model_path=None, n_test_digits=2):
+    with tf.Session() as sess:
+        if model_path:
+            saver.restore(sess, model_path)
+        outputs_val = outputs.eval(feed_dict={X: X_test[:n_test_digits]})
+
+    fig = plt.figure(figsize=(8, 3*n_test_digits))
+    for digit_index in range(n_test_digits):
+        plt.subplot(n_test_digits, 2, digit_index * 2 + 1)
+        plot_image(X_test[digit_index])
+        plt.subplot(n_test_digits, 2, digit_index * 2 + 2)
+        plot_image(outputs_val[digit_index])
+
 
 # 1
 # Set hyper-parameter
+reset_graph()
 learning_rate = 0.01
 l2_reg = 0.0001
 n_epochs = 5
 batch_size = 150
 
+2
+# Input MNIST dataset
+(X_train, y_train), (X_test, y_test) = tf.keras.datasets.mnist.load_data()
+X_train = X_train.astype(np.float32).reshape(-1, 28*28) / 255.0
+X_test = X_test.astype(np.float32).reshape(-1, 28*28) / 255.0
+y_train = y_train.astype(np.int32)
+y_test = y_test.astype(np.int32)
+X_valid, X_train = X_train[:5000], X_train[5000:]
+y_valid, y_train = y_train[:5000], y_train[5000:]
+
+
+def shuffle_batch(X, y, batchsize):
+    rnd_idx = np.random.permutation(len(X))
+    n_batches = len(X) // batch_size
+    for batch_idx in np.array_split(rnd_idx, n_batches):
+        X_batch, y_batch = X[batch_idx], y[batch_idx]
+        yield X_batch, y_batch
 
 # 2
 # Design model
@@ -52,7 +117,7 @@ n_hidden3 = n_hidden1
 n_outputs = n_inputs
 
 activation = tf.nn.relu
-reqularizer = tf.contrib.layers.l2_regularize(l2_reg)
+regularizer = tf.contrib.layers.l2_regularize(l2_reg)
 initializer = tf.variance_scaling_initializer()
 
 # 3
@@ -81,22 +146,38 @@ outputs = tf.matmul(hidden3, weights4) + biases4
 # 4
 # Set loss function and optimizer.
 reconstruction_loss = tf.reduce_mean(tf.square(outputs - X))  # MSE
-reg_losses = reqularizer(weights1) + reqularizer(weights2)
+reg_losses = regularizer(weights1) + regularizer(weights2)
 loss = [reconstruction_loss] + reg_losses
+recostrcuction_loss_summ = tf.summary.scalar("reconstrcution_loss", reconstruction_loss)
+loss_summ = tf.summary.scalar("loss", loss)
+summary = tf.summary.merge_all()
 
 optimizer = tf.train.AdamOptimizer(learning_rate)
 training_op = optimizer.minimize(loss)
 
 # 5
 # Initialize values and Run train.
+model_path = os.path.join('/home/wisemold/Python/old/test_hyeona/model')
+pathlib.Path(model_path).mkdir(parents=True, exist_ok=True)
 init = tf.global_variables_initializer()
+saver = tf.train.Saver()
 
 with tf.Session() as sess:
+    writer = tf.summary.FileWriter(os.path.join( PROJECT_ROOT_DIR, 'logs', 'autoencoder', "sharing_weight" + str( learning_rate ) ) )
+    writer.add_graph( sess.graph )
+
     init.run()
     for epoch in range(n_epochs):
-        n_batches = len(X_train)  # Batch size
+        n_batches = len(X_train) // batch_size
         for iteration in range(n_batches):
-            # suffle_batch()
+            print("\r{}%".format(100 * iteration // n_batches), end="")
+            sys.stdout.flush()
             X_batch, y_batch = next(shuffle_batch(X_train, y_train, batch_size))
-            sess.run(training_op, feed_dict={X: X_batch})
+            s, _ = sess.run([summary, training_op], feed_dict={X: X_batch})
+            writer.add_summary( s, global_step=iteration )
+        loss_train = reconstruction_loss.eval(feed_dict={X: X_batch})
+        print("\r{}%".format(epoch), "훈련 MSE:", loss_train)
+        saver.save( sess, os.path.join( model_path, "my_model_tying_weights.ckpt" ) )
 
+show_reconstructed_digits(X, outputs,  os.path.join( model_path, "my_model_tying_weights.ckpt" ))
+save_fig("reconstruction_weight_sharing_plot")
