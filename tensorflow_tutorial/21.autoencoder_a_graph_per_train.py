@@ -153,14 +153,23 @@ with tf.Session() as sess:
     init.run()
     for phase in range(2):
         print("훈련단계 #{}".format(phase + 1))
+        if phase == 1:
+            hidden1_cache = hidden1.eval(feed_dict={X: X_train})
         for epoch in range(n_epochs[phase]):
             n_batches = len(X_train) // batch_sizes[phase]
             for iteration in range(n_batches):
                 print("\r{}%".format(100 * iteration // n_batches), end="")
                 sys.stdout.flush()
-                X_batch, y_batch = next(shuffle_batch(X_train, y_train, batch_sizes[phase]))
-                sess.run(training_ops[phase], feed_dict={X: X_batch})
-            loss_train = reconstruction_losses[phase].eval(feed_dict={X: X_batch})
+                if phase == 1:
+                    indices = rnd.permutation(len(X_train))
+                    hidden1_batch = hidden1_cache[indices[:batch_sizes[phase]]]
+                    feed_dict = {hidden1: hidden1_batch}
+                    sess.run(training_ops[phase], feed_dict=feed_dict)
+                else:
+                    X_batch, y_batch = next(shuffle_batch(X_train, y_train, batch_sizes[phase]))
+                    feed_dict = {X: X_batch}
+                    sess.run(training_ops[phase], feed_dict=feed_dict)
+            loss_train = reconstruction_losses[phase].eval(feed_dict=feed_dict)
             print("\r{}".format(epoch), "훈련 MES:", loss_train)
             saver.save(sess,  os.path.join(save_model_dir, "epoch_"+str(n_epochs[0])+"_"+str(n_epochs[1])+"_lr_"+str(learning_rate)+"my_model_one_at_a_time.ckpt"))
         loss_test = reconstruction_loss.eval(feed_dict={X: X_test})
@@ -171,3 +180,16 @@ with tf.Session() as sess:
 
 show_reconstruct_digits(X, outputs, os.path.join(save_model_dir, "epoch_"+str(n_epochs[0])+"_"+str(n_epochs[1])+"_lr_"+str(learning_rate)+"my_model_one_at_a_time.ckpt"))
 save_fig("reconstruction_one_at_a_time_plot_"+str(n_epochs[0])+"_"+str(n_epochs[1])+'_'+str( learning_rate ))
+
+# 6
+# save feature images.
+with tf.Session() as sess:
+    saver.restore(sess, os.path.join(save_model_dir, "epoch_"+str(n_epochs[0])+"_"+str(n_epochs[1])+"_lr_"+str(learning_rate)+"my_model_one_at_a_time.ckpt"))
+    weights1_val = weights1.eval()
+
+fig = plt.figure(figsize=( 3 * 5, 3))
+for i in range(5):
+    plt.subplot(1, 5, i + 1)
+    plot_image(weights1_val.T[i])
+
+save_fig("extract_features_one_at_a_time_plot_"+str(n_epochs[0])+"_"+str(n_epochs[1])+'_'+str( learning_rate ))
