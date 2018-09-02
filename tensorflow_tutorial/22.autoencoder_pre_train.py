@@ -118,6 +118,34 @@ hidden2 = activation(tf.matmul(hidden1, weights2) + biases2)
 logits = tf.matmul(hidden2, weights3) + biases3
 
 cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(la)
+reg_loss = regularizer(weights1) + regularizer(weights2) + regularizer(weights3)
+loss = cross_entropy + reg_loss
+optimizer = tf.train.AdamOptimizer(learning_rate)
+training_op = optimizer.minimize(loss, var_list=[weights3, biases3])  # layer 1과 2를 동결
+
+correct = tf.nn.in_top_k(logits, y, 1)
+accuracy = tf.reduce_mean(tf.case(correct, tf.float32))
+
+init = tf.global_variables_initializer()
+pretrain_saver = tf.train.Saver([weights1, weights2, weights3])
+saver = tf.train.Saver()
 
 # 10. run train
-# 11. predict test
+n_labeled_instance = 20000
+
+with tf.Session() as sess:
+    init.run()
+    pretrain_saver.restore(sess, os.path.join(model_save_dir, "my_model_cache_frozen.ckpt"))
+    for epoch in range(n_epoch):
+        n_batches = n_labeled_instance // batchsize
+        for iteration in range(batchsize):
+            print("\r{}%".format(100 * iteration // n_batches), end="")
+            sys.stdout.flush()
+            indices = rnd.permutation(n_labeled_instance)[:batchsize]
+            X_batch, y_batch = X_train[:indices], y_train[:indices]
+            sess.run(training_op, feed_dict={X: X_batch, y: y_batch})
+        accuracy_val = accuracy.eval(feed_dict={X: X_batch, y: y_batch})
+        print("\r{}".format(epoch), "검증세트 정확도 : ", accuracy_val, end="\t")
+        saver.save(sess, os.path.join(model_save_dir, "my_model_supervised.ckpt"))
+        test_val = accuracy.val(feed_dict={X: X_test, y: y_test})
+        print("테스트 정확도 : ", test_val)
